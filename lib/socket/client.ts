@@ -5,8 +5,12 @@ import { SocketMessage, Room, User, UserRole, SupportedLanguage } from '@/types'
 
 class SocketClient {
   private socket: Socket | null = null;
-  private roomId: string | null = null;
+  private _roomId: string | null = null;
   private userId: string | null = null;
+
+  get roomId(): string | null {
+    return this._roomId;
+  }
 
   connect() {
     if (this.socket?.connected) return;
@@ -37,32 +41,37 @@ class SocketClient {
   }
 
   joinRoom(roomId: string, user: User) {
-    if (!this.socket) {
+    // 이미 같은 방에 연결되어 있으면 재연결하지 않음
+    if (this.socket?.connected && this._roomId === roomId && this.userId === user.id) {
+      return;
+    }
+
+    if (!this.socket || !this.socket.connected) {
       this.connect();
     }
 
-    this.roomId = roomId;
+    this._roomId = roomId;
     this.userId = user.id;
 
     this.socket?.emit('join-room', { roomId, user });
   }
 
   leaveRoom() {
-    if (this.socket && this.roomId && this.userId) {
-      this.socket.emit('leave-room', { roomId: this.roomId, userId: this.userId });
-      this.roomId = null;
+    if (this.socket && this._roomId && this.userId) {
+      this.socket.emit('leave-room', { roomId: this._roomId, userId: this.userId });
+      this._roomId = null;
       this.userId = null;
     }
   }
 
   sendAudioChunk(audioChunk: ArrayBuffer) {
-    if (this.socket && this.roomId && this.userId) {
+    if (this.socket && this._roomId && this.userId) {
       // ArrayBuffer를 Base64로 인코딩
       const uint8Array = new Uint8Array(audioChunk);
       const base64 = btoa(String.fromCharCode(...uint8Array));
       
       this.socket.emit('audio-chunk', {
-        roomId: this.roomId,
+        roomId: this._roomId,
         userId: this.userId,
         audioChunk: base64,
       });
@@ -70,9 +79,9 @@ class SocketClient {
   }
 
   changeRole(role: UserRole) {
-    if (this.socket && this.roomId && this.userId) {
+    if (this.socket && this._roomId && this.userId) {
       this.socket.emit('role-changed', {
-        roomId: this.roomId,
+        roomId: this._roomId,
         userId: this.userId,
         role,
       });
@@ -80,9 +89,9 @@ class SocketClient {
   }
 
   changeLanguage(language: SupportedLanguage) {
-    if (this.socket && this.roomId && this.userId) {
+    if (this.socket && this._roomId && this.userId) {
       this.socket.emit('language-changed', {
-        roomId: this.roomId,
+        roomId: this._roomId,
         userId: this.userId,
         language,
       });

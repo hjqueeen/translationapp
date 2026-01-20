@@ -15,12 +15,23 @@ export default function RoomView() {
   useEffect(() => {
     if (!room || !currentUser) return;
 
+    // 이미 연결되어 있고 같은 방에 있으면 재연결하지 않음
+    if (socketClient.isConnected() && socketClient.roomId === room.id) {
+      return;
+    }
+
     // Socket 연결
     socketClient.connect();
     socketClient.joinRoom(room.id, currentUser);
 
     // 이벤트 리스너 설정
     const handleRoomJoined = (data: { room: Room; user: User }) => {
+      // 무한 루프 방지: 같은 데이터면 업데이트하지 않음
+      if (data.room.id === room.id && data.user.id === currentUser.id) {
+        setConnected(true);
+        setIsConnected(true);
+        return;
+      }
       setRoom(data.room);
       setCurrentUser(data.user);
       setConnected(true);
@@ -28,18 +39,24 @@ export default function RoomView() {
     };
 
     const handleUserJoined = (data: { user: User; room: Room }) => {
-      setRoom(data.room);
+      if (data.room.id === room.id) {
+        setRoom(data.room);
+      }
     };
 
     const handleUserLeft = (data: { userId: string; room: Room }) => {
-      setRoom(data.room);
+      if (data.room && data.room.id === room.id) {
+        setRoom(data.room);
+      }
     };
 
     const handleRoleChanged = (data: { userId: string; role: UserRole; room: Room }) => {
-      if (data.userId === currentUser.id) {
-        updateUserRole(data.role);
+      if (data.room.id === room.id) {
+        if (data.userId === currentUser.id) {
+          updateUserRole(data.role);
+        }
+        setRoom(data.room);
       }
-      setRoom(data.room);
     };
 
     const handleError = (data: { message: string }) => {
@@ -59,10 +76,10 @@ export default function RoomView() {
       socketClient.off('user-left', handleUserLeft);
       socketClient.off('role-changed', handleRoleChanged);
       socketClient.off('error', handleError);
-      socketClient.leaveRoom();
-      socketClient.disconnect();
+      // cleanup에서는 disconnect하지 않음 (컴포넌트가 언마운트될 때만)
     };
-  }, [room, currentUser, setRoom, setCurrentUser, setConnected, updateUserRole]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.id, currentUser?.id]); // room과 currentUser 객체 전체가 아닌 id만 의존성으로
 
   const handleRoleSwitch = (newRole: UserRole) => {
     if (!currentUser) return;
