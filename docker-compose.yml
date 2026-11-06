@@ -1,17 +1,10 @@
-version: '3.8'
-
 services:
-  nextjs:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev --bind 0.0.0.0
     ports:
-      - "3000:3000"
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
     environment:
-      - NODE_ENV=production
-    volumes:
-      # 개발 모드에서 사용할 경우 (선택사항)
-      # - .:/app
-      # - /app/node_modules
-      # - /app/.next
-    restart: unless-stopped
+      LIVEKIT_KEYS: "devkey: secret"
