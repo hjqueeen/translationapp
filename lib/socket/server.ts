@@ -11,7 +11,7 @@ import {
   addUserToRoom,
   removeUserFromRoom,
   getRoom,
-} from '@/app/api/socket/route';
+} from '@/lib/socket/rooms';
 
 let io: SocketIOServer | null = null;
 

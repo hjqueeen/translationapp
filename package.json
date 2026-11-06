@@ -6,6 +6,7 @@
     "dev": "node server.js",
     "dev:next": "next dev",
     "build": "next build",
+    "build:pages": "node scripts/build-pages.mjs",
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },

@@ -48,6 +48,28 @@ npm run dev
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 앱을 확인하세요.
 
+## GitHub Pages 배포
+
+정적 프론트엔드는 GitHub Pages로 배포할 수 있습니다. Socket.IO·번역 API는 Pages에서 동작하지 않으므로, **UI 미리보기용**입니다. 실시간 번역은 Docker/로컬 서버가 필요합니다.
+
+### 1. 저장소 설정
+
+1. GitHub 저장소 → **Settings** → **Pages**
+2. **Source**를 **GitHub Actions**로 선택
+
+### 2. 배포
+
+`main` 또는 `develop`에 push하거나 Actions에서 **Deploy to GitHub Pages** 워크플로를 수동 실행합니다.
+
+배포 URL 예: `https://hjqueeen.github.io/translationapp/`
+
+### 3. 로컬에서 정적 빌드 확인
+
+```bash
+npm run build:pages
+npx serve out
+```
+
 ## Docker를 사용한 실행
 
 이 프로젝트는 Node.js 24.13.0을 사용하며 Docker를 통해 실행할 수 있습니다.

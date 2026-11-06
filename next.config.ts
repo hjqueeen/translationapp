@@ -1,9 +1,18 @@
 import type { NextConfig } from "next";
 
+const isGithubPages = process.env.GITHUB_PAGES === "true";
+const repoName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "translationapp";
+
 const nextConfig: NextConfig = {
-  output: 'standalone', // Docker를 위한 standalone 출력 모드
+  // Docker/서버: standalone | GitHub Pages: 정적 export
+  output: isGithubPages ? "export" : "standalone",
+  ...(isGithubPages && {
+    basePath: `/${repoName}`,
+    assetPrefix: `/${repoName}/`,
+    trailingSlash: true,
+    images: { unoptimized: true },
+  }),
   webpack: (config, { isServer }) => {
-    // 클라이언트 사이드에서 socket.io-client를 사용할 수 있도록 설정
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
