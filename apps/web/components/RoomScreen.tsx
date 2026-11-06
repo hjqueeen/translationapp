@@ -2,7 +2,9 @@
 
 import { useMemo } from 'react';
 import { ConnectionState } from 'livekit-client';
+import QRCode from 'react-qr-code';
 import { useRoomSession } from '@/src/livekit/useRoomSession';
+import { buildRoomJoinLink } from '@/src/roomLink';
 import type { SessionParams } from '@/src/types';
 
 interface RoomScreenProps {
@@ -13,6 +15,7 @@ interface RoomScreenProps {
 export default function RoomScreen({ session, onLeave }: RoomScreenProps) {
   const { role, code, token, livekitUrl, language } = session;
   const live = useRoomSession({ token, livekitUrl, role, language });
+  const joinLink = useMemo(() => (code ? buildRoomJoinLink(code) : ''), [code]);
 
   const statusLabel = useMemo(() => {
     switch (live.connectionState) {
@@ -44,13 +47,22 @@ export default function RoomScreen({ session, onLeave }: RoomScreenProps) {
         <section className="flex-1 rounded border border-[#C9C2B2] bg-white p-5">
           {role === 'speaker' ? (
             <>
-              <h2 className="mb-2 text-xl font-bold text-[#14231C]">
-                Share this code with listeners
-              </h2>
+              <h2 className="mb-2 text-xl font-bold text-[#14231C]">Share code or QR</h2>
               <p className="mb-5 text-[15px] leading-6 text-[#4A5C52]">
-                마이크 오디오가 AI 통역으로 전달됩니다. 청취자는 언어를 고르고 번역된
-                음성 트랙을 듣습니다.
+                청취자가 코드를 입력하거나 QR을 스캔해 입장합니다. 마이크 오디오가 AI
+                통역으로 전달됩니다.
               </p>
+
+              {joinLink ? (
+                <div className="mb-5 flex flex-col items-center gap-2.5 py-3">
+                  <div className="rounded bg-white p-3">
+                    <QRCode value={joinLink} size={180} fgColor="#0B3D2E" bgColor="#FFFFFF" />
+                  </div>
+                  <p className="text-sm font-semibold text-[#4A5C52]">Scan to join</p>
+                  <p className="break-all px-2 text-center text-xs text-[#4A5C52]">{joinLink}</p>
+                </div>
+              ) : null}
+
               <button
                 type="button"
                 onClick={() => void live.toggleMic()}

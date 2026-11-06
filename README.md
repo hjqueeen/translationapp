@@ -59,8 +59,9 @@ npm run web
 
 ## 사용 흐름
 
-1. **화자**: 홈 → Create room → 6자리 코드 공유 → 마이크 ON
-2. **청취자**: 홈 → 코드 입력 → 언어 선택 → Enter room
+1. **화자**: 홈 → Create room → 6자리 코드 또는 QR을 공유 → 마이크 ON
+2. **청취자**: 홈 → 코드 입력 **또는 Scan room QR** → 언어 선택 → Enter room  
+   (QR 링크 `/?code=XXXXXX`를 폰 카메라로 열어도 입장 화면으로 이동)
 3. Agent가 화자 음성을 문장 단위로 통역하고 `lang-en` 등 언어별 오디오 트랙을 publish
 4. 청취자 앱은 선택한 언어 트랙만 재생하고, 자막(data channel)을 표시
 

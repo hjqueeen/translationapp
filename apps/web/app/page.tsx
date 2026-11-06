@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { normalizeRoomCode } from '@translation/shared';
+import { useCallback, useEffect, useState } from 'react';
 import { createRoom } from '@/src/api';
+import { parseRoomCodeFromPayload } from '@/src/roomLink';
 import type { SessionParams } from '@/src/types';
 import JoinScreen from '@/components/JoinScreen';
 import RoomScreen from '@/components/RoomScreen';
+import ScanScreen from '@/components/ScanScreen';
 
 type Screen =
   | { name: 'home' }
   | { name: 'join'; code: string }
+  | { name: 'scan' }
   | { name: 'room'; session: SessionParams };
 
 export default function Home() {
@@ -17,6 +19,16 @@ export default function Home() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('code') ?? params.get('join') ?? '';
+    const parsed = raw ? parseRoomCodeFromPayload(raw) : null;
+    if (!parsed) return;
+    setScreen({ name: 'join', code: parsed });
+    window.history.replaceState({}, '', window.location.pathname);
+  }, []);
 
   const onCreate = async () => {
     setLoading(true);
@@ -42,14 +54,19 @@ export default function Home() {
   };
 
   const onContinueJoin = () => {
-    const normalized = normalizeRoomCode(code);
-    if (normalized.length !== 6) {
+    const normalized = parseRoomCodeFromPayload(code);
+    if (!normalized) {
       setError('6자리 방 코드를 입력하세요.');
       return;
     }
     setError(null);
     setScreen({ name: 'join', code: normalized });
   };
+
+  const onScanned = useCallback((scannedCode: string) => {
+    setError(null);
+    setScreen({ name: 'join', code: scannedCode });
+  }, []);
 
   if (screen.name === 'room') {
     return (
@@ -70,6 +87,15 @@ export default function Home() {
         code={screen.code}
         onBack={() => setScreen({ name: 'home' })}
         onJoined={(session) => setScreen({ name: 'room', session })}
+      />
+    );
+  }
+
+  if (screen.name === 'scan') {
+    return (
+      <ScanScreen
+        onBack={() => setScreen({ name: 'home' })}
+        onScanned={onScanned}
       />
     );
   }
@@ -116,7 +142,15 @@ export default function Home() {
           onClick={onContinueJoin}
           className="w-full rounded border-[1.5px] border-[#0B3D2E] py-3.5 text-center text-base font-bold text-[#0B3D2E]"
         >
-          Continue
+          Continue with code
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setScreen({ name: 'scan' })}
+          className="mt-3 w-full rounded bg-[#C45C26] py-3.5 text-center text-base font-bold text-white"
+        >
+          Scan room QR
         </button>
 
         {error ? <p className="mt-4 text-sm text-[#9B2C2C]">{error}</p> : null}
